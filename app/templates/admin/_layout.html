@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-shell">
+  <div class="admin-sidebar">
+    <h3>GARBA ADMIN</h3>
+    <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' }}">Dashboard</a>
+    {% if current_user.is_admin %}
+    <a href="{{ url_for('admin.events_list') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.event') }}">Events</a>
+    <a href="{{ url_for('admin.tickets_list') }}" class="{{ 'active' if request.endpoint and 'ticket' in request.endpoint and 'type' not in request.endpoint and 'event' not in request.endpoint }}">Tickets</a>
+    <a href="{{ url_for('admin.staff') }}" class="{{ 'active' if request.endpoint == 'admin.staff' }}">Staff</a>
+    {% endif %}
+    <a href="{{ url_for('scanner.scanner_page') }}">Scanner</a>
+    <a href="{{ url_for('auth.logout') }}" style="margin-top:20px;opacity:.8;">Log out ({{ current_user.username }})</a>
+  </div>
+  <div class="admin-main">
+    {% block admin_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

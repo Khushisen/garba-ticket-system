@@ -1,0 +1,43 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Staff Accounts{% endblock %}
+{% block admin_content %}
+<h2 style="color:var(--maroon);">Staff Accounts</h2>
+<table style="margin-bottom:30px;">
+  <thead><tr><th>Username</th><th>Role</th><th>Gate</th><th>Active</th><th></th></tr></thead>
+  <tbody>
+    {% for u in staff_users %}
+    <tr>
+      <td>{{ u.username }}</td>
+      <td><span class="badge badge-active">{{ u.role }}</span></td>
+      <td>{{ u.gate_name or '—' }}</td>
+      <td>{{ 'Yes' if u.is_active_flag else 'No' }}</td>
+      <td>
+        {% if u.id != current_user.id %}
+        <form method="POST" action="{{ url_for('admin.staff_toggle_active', user_id=u.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-secondary" type="submit">{{ 'Deactivate' if u.is_active_flag else 'Activate' }}</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3 style="color:var(--maroon);">Add Staff Account</h3>
+<form method="POST" style="max-width:480px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-group"><label>Username</label><input name="username" required></div>
+  <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+  <div class="form-group"><label>Email (optional)</label><input type="email" name="email"></div>
+  <div class="form-group">
+    <label>Role</label>
+    <select name="role">
+      <option value="scanner">Scanner (gate staff — scan only)</option>
+      <option value="admin">Admin (full access)</option>
+    </select>
+  </div>
+  <div class="form-group"><label>Gate Name (for scanners)</label><input name="gate_name" placeholder="e.g. Gate 1, VIP Gate"></div>
+  <button type="submit" class="btn">Create Account</button>
+</form>
+{% endblock %}

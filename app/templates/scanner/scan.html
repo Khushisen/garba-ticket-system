@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Entry Scanner{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="scanner-page">
+  <h1>GARBA ENTRY SCANNER</h1>
+  <p style="color:#7a6a5f;">{{ gate_name or 'Scanner' }} · <a href="{{ url_for('auth.logout') }}">Log out</a></p>
+
+  <div id="reader" style="width:100%;"></div>
+  <p id="scan-hint" style="color:#a08f7f;font-size:0.85rem;">Point the camera at a guest's QR code.</p>
+
+  <div id="result-box" style="display:none;"></div>
+
+  <div style="margin-top:20px;">
+    <button id="scan-another" class="btn btn-secondary" style="display:none;">Scan Next Guest</button>
+  </div>
+</div>
+
+<audio id="beep-ok" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" preload="auto"></audio>
+<script>
+const resultBox = document.getElementById('result-box');
+const scanHint = document.getElementById('scan-hint');
+const scanAnotherBtn = document.getElementById('scan-another');
+let scanning = true;
+let html5QrCode;
+
+function vibrate(pattern) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+function renderResult(payload) {
+  const r = payload.result;
+  let cls = 'invalid';
+  let icon = '✗';
+  let title = 'INVALID TICKET';
+  let detail = payload.message || '';
+
+  if (r === 'VALID') {
+    cls = 'valid'; icon = '✓'; title = 'VALID TICKET — ENTRY ALLOWED';
+    vibrate(200);
+  } else if (r === 'ALREADY_USED') {
+    icon = '✗'; title = 'TICKET ALREADY USED — ENTRY DENIED';
+    vibrate([100,60,100]);
+  } else if (r === 'CANCELLED') {
+    title = 'TICKET CANCELLED — ENTRY DENIED';
+  } else if (r === 'REFUNDED') {
+    title = 'TICKET REFUNDED — ENTRY DENIED';
+  } else if (r === 'EXPIRED') {
+    title = 'TICKET EXPIRED — ENTRY DENIED';
+  } else if (r === 'PAYMENT_NOT_CONFIRMED') {
+    title = 'PAYMENT NOT CONFIRMED — ENTRY DENIED';
+  } else {
+    title = 'INVALID TICKET — ENTRY DENIED';
+  }
+
+  let ticketHtml = '';
+  if (payload.ticket) {
+    ticketHtml = `
+      <p><strong>Name:</strong> ${payload.ticket.holder_name}</p>
+      <p><strong>Pass:</strong> ${payload.ticket.ticket_type_name}</p>
+      <p><strong>Ticket ID:</strong> ${payload.ticket.ticket_id}</p>
+      ${payload.ticket.used_at ? `<p><strong>Used at:</strong> ${payload.ticket.used_at}</p>` : ''}
+    `;
+  }
+
+  resultBox.className = 'scan-result ' + cls;
+  resultBox.style.display = 'block';
+  resultBox.innerHTML = `<div class="big-icon">${icon}</div><h2>${title}</h2>${ticketHtml}<p>${detail}</p>`;
+  scanAnotherBtn.style.display = 'inline-block';
+  scanHint.style.display = 'none';
+}
+
+async function onScanSuccess(decodedText) {
+  if (!scanning) return;
+  scanning = false;
+  try { await html5QrCode.pause(true); } catch (e) {}
+
+  try {
+    const res = await fetch("{{ url_for('scanner.api_verify') }}", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({qr_data: decodedText, gate_name: {{ (gate_name or 'Scanner') | tojson }} }),
+    });
+    const payload = await res.json();
+    renderResult(payload);
+  } catch (e) {
+    renderResult({result: 'INVALID', message: 'Network error — try again.'});
+  }
+}
+
+function startScanner() {
+  html5QrCode = new Html5Qrcode("reader");
+  html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 240 },
+    onScanSuccess
+  ).catch(err => {
+    scanHint.textContent = 'Could not access camera: ' + err;
+  });
+}
+
+scanAnotherBtn.addEventListener('click', async () => {
+  resultBox.style.display = 'none';
+  scanAnotherBtn.style.display = 'none';
+  scanHint.style.display = 'block';
+  scanning = true;
+  try { await html5QrCode.resume(); } catch (e) {}
+});
+
+startScanner();
+</script>
+{% endblock %}

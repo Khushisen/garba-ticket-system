@@ -1,0 +1,48 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block admin_content %}
+<div class="topbar">
+  <h2 style="color:var(--maroon);margin:0;">Dashboard</h2>
+  <a href="{{ url_for('scanner.scanner_page') }}" class="btn btn-sm">Open Scanner</a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="value">{{ total_tickets }}</div><div class="label">Total Tickets</div></div>
+  <div class="stat-card"><div class="value">{{ paid_bookings }}</div><div class="label">Paid Bookings</div></div>
+  <div class="stat-card"><div class="value">{{ pending_payments }}</div><div class="label">Pending Payments</div></div>
+  <div class="stat-card"><div class="value">{{ cancelled_tickets }}</div><div class="label">Cancelled Tickets</div></div>
+  <div class="stat-card"><div class="value">{{ used_tickets }}</div><div class="label">Tickets Used</div></div>
+  <div class="stat-card"><div class="value">{{ remaining_tickets }}</div><div class="label">Tickets Remaining</div></div>
+  <div class="stat-card"><div class="value">₹{{ '%.0f'|format(total_revenue) }}</div><div class="label">Total Revenue</div></div>
+  <div class="stat-card"><div class="value">{{ today_entries }}</div><div class="label">Today's Entries</div></div>
+</div>
+
+<h3 style="color:var(--maroon);">Pass-Type Sales</h3>
+<table style="margin-bottom:30px;">
+  <thead><tr><th>Pass Type</th><th>Sold</th></tr></thead>
+  <tbody>
+    {% for name, sold in ticket_type_breakdown %}
+    <tr><td>{{ name }}</td><td>{{ sold }}</td></tr>
+    {% else %}
+    <tr><td colspan="2">No sales yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3 style="color:var(--maroon);">Recent Scans</h3>
+<table>
+  <thead><tr><th>Result</th><th>Ticket</th><th>Gate</th><th>Time</th></tr></thead>
+  <tbody>
+    {% for scan in recent_scans %}
+    <tr>
+      <td><span class="badge badge-{{ scan.result }}">{{ scan.result }}</span></td>
+      <td>{{ scan.ticket.ticket_id if scan.ticket else '—' }}</td>
+      <td>{{ scan.gate_name or '—' }}</td>
+      <td>{{ scan.scan_time.strftime('%d %b %I:%M %p') }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">No scans yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

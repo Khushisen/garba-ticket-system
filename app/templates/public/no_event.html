@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Garba Night{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>No Event Yet</h1>
+  <p class="tagline">Nothing has been set up here yet. If you're the organizer, log in and create your event.</p>
+  <a class="btn" href="{{ url_for('auth.login') }}">Staff Login</a>
+</section>
+{% endblock %}

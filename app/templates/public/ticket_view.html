@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Your Pass — {{ ticket.ticket_id }}{% endblock %}
+{% block content %}
+<div class="ticket-wrap">
+  <div class="ticket">
+    <div class="ticket-header">
+      <h2>{{ event.name }}</h2>
+      <div>{{ event.date.strftime('%d %B %Y') }}{% if event.start_time %} · {{ event.start_time.strftime('%I:%M %p') }}{% endif %}</div>
+    </div>
+    <div class="ticket-body">
+      <div class="ticket-field"><label>Name</label><div>{{ ticket.holder_name }}</div></div>
+      <div class="ticket-field"><label>Pass Type</label><div>{{ ticket.ticket_type_name }}</div></div>
+      <div class="ticket-field"><label>Ticket ID</label><div>{{ ticket.ticket_id }}</div></div>
+
+      <div class="ticket-qr">
+        {% if payment_confirmed %}
+          <img src="{{ url_for('ticket.qr_image', secure_slug=ticket.secure_slug) }}" alt="QR code" onerror="this.style.display='none'">
+          <p style="color:#999;font-size:0.8rem;">Show this QR at the entry gate.</p>
+        {% else %}
+          <p style="color:#b8263a;">Payment not yet confirmed — QR will appear here once payment is verified.</p>
+        {% endif %}
+      </div>
+
+      <div style="text-align:center;margin-bottom:14px;">
+        {% if ticket.status == 'ACTIVE' %}<span class="status-pill status-paid">PAID · ACTIVE</span>
+        {% elif ticket.status == 'USED' %}<span class="status-pill status-used">USED{% if ticket.used_at %} at {{ ticket.used_at.strftime('%I:%M %p') }}{% endif %}</span>
+        {% elif ticket.status == 'CANCELLED' %}<span class="status-pill status-cancelled">CANCELLED</span>
+        {% elif ticket.status == 'REFUNDED' %}<span class="status-pill status-cancelled">REFUNDED</span>
+        {% else %}<span class="status-pill status-pending">{{ ticket.status }}</span>{% endif %}
+      </div>
+
+      {% if payment_confirmed %}
+      <a class="btn btn-block" href="{{ url_for('ticket.download_ticket', secure_slug=ticket.secure_slug) }}">Download PDF</a>
+      {% endif %}
+      <p style="text-align:center;font-size:0.78rem;color:#a08f7f;margin-top:16px;">
+        This ticket is valid for ONE entry only and cannot be reused once scanned.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

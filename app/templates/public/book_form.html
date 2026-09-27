@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Book — {{ ticket_type.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>{{ ticket_type.name }}</h2>
+  <p style="text-align:center;color:#7a6a5f;margin-top:-10px;">₹{{ '%.0f'|format(ticket_type.price) }} per pass · {{ event.name }}</p>
+
+  <form id="booking-form">
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" name="name" required>
+      <div class="error" id="err-name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input type="tel" name="mobile" required>
+        <div class="error" id="err-mobile"></div>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" required>
+        <div class="error" id="err-email"></div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Number of Passes</label>
+        <input type="number" name="quantity" min="1" max="10" value="1" required>
+        <div class="error" id="err-quantity"></div>
+      </div>
+      <div class="form-group">
+        <label>Gender (optional)</label>
+        <select name="gender">
+          <option value="">Prefer not to say</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Age (optional)</label>
+        <input type="number" name="age" min="1" max="120">
+      </div>
+      <div class="form-group">
+        <label>Emergency Contact (optional)</label>
+        <input type="tel" name="emergency_contact">
+      </div>
+    </div>
+    <div class="form-group checkbox-row">
+      <input type="checkbox" name="terms_accepted" id="terms" required>
+      <label for="terms" style="margin:0;font-weight:400;">I agree to the event's terms &amp; conditions and understand this pass is valid for one entry only.</label>
+    </div>
+    <div class="error" id="err-general"></div>
+    <button type="submit" class="btn btn-block">Continue to Payment</button>
+  </form>
+</div>
+
+<script>
+const form = document.getElementById('booking-form');
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.querySelectorAll('.error').forEach(el => el.textContent = '');
+
+  const data = Object.fromEntries(new FormData(form).entries());
+  data.event_id = {{ event.id }};
+  data.ticket_type_id = {{ ticket_type.id }};
+  data.terms_accepted = form.terms.checked;
+
+  const submitBtn = form.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Please wait...';
+
+  try {
+    const res = await fetch("{{ url_for('booking_api.create_booking_api') }}", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) {
+      window.location.href = result.redirect_url;
+    } else {
+      for (const [field, msg] of Object.entries(result.errors || {})) {
+        const el = document.getElementById('err-' + field) || document.getElementById('err-general');
+        if (el) el.textContent = msg;
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Continue to Payment';
+    }
+  } catch (err) {
+    document.getElementById('err-general').textContent = 'Something went wrong. Please try again.';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Continue to Payment';
+  }
+});
+</script>
+{% endblock %}

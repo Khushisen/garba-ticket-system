@@ -1,0 +1,57 @@
+{% extends "admin/_layout.html" %}
+{% block title %}{{ 'Edit Event' if event else 'New Event' }}{% endblock %}
+{% block admin_content %}
+<h2 style="color:var(--maroon);">{{ 'Edit Event' if event else 'New Event' }}</h2>
+<form method="POST" style="max-width:600px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-group">
+    <label>Event Name</label>
+    <input type="text" name="name" value="{{ event.name if event else '' }}" required>
+  </div>
+  <div class="form-group">
+    <label>Description</label>
+    <textarea name="description" rows="3">{{ event.description if event else '' }}</textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" name="date" value="{{ event.date.isoformat() if event else '' }}" required>
+    </div>
+    <div class="form-group">
+      <label>Start Time</label>
+      <input type="time" name="start_time" value="{{ event.start_time.strftime('%H:%M') if event and event.start_time else '' }}">
+    </div>
+    <div class="form-group">
+      <label>End Time</label>
+      <input type="time" name="end_time" value="{{ event.end_time.strftime('%H:%M') if event and event.end_time else '' }}">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Venue</label>
+    <input type="text" name="venue" value="{{ event.venue if event else '' }}">
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Dress Code</label>
+      <input type="text" name="dress_code" value="{{ event.dress_code if event else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Contact Info</label>
+      <input type="text" name="contact_info" value="{{ event.contact_info if event else '' }}">
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Rules</label>
+    <textarea name="rules" rows="2">{{ event.rules if event else '' }}</textarea>
+  </div>
+  <div class="form-group">
+    <label>Booking Status</label>
+    <select name="status">
+      <option value="open" {{ 'selected' if event and event.status == 'open' }}>Open — accepting bookings</option>
+      <option value="closed" {{ 'selected' if event and event.status == 'closed' }}>Closed — bookings paused</option>
+      <option value="draft" {{ 'selected' if event and event.status == 'draft' }}>Draft — hidden from public site</option>
+    </select>
+  </div>
+  <button type="submit" class="btn">{{ 'Save Changes' if event else 'Create Event' }}</button>
+</form>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ event.name }}{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-eyebrow">Navratri Special</div>
+  <h1>{{ event.name }}</h1>
+  <p class="tagline">{{ event.description or '' }}</p>
+  <div class="hero-meta">
+    <span>📅 {{ event.date.strftime('%d %B %Y') }}</span>
+    {% if event.start_time %}<span>⏰ {{ event.start_time.strftime('%I:%M %p') }} onwards</span>{% endif %}
+    {% if event.venue %}<span>📍 {{ event.venue }}</span>{% endif %}
+  </div>
+  <a href="#passes" class="btn">Book Your Pass</a>
+</section>
+
+<div class="container">
+  <section class="section">
+    <h2 class="section-title">Event Information</h2>
+    <p class="section-sub">Everything you need to know before you arrive</p>
+    <div class="info-grid">
+      <div class="info-card"><h4>Date &amp; Time</h4><p>{{ event.date.strftime('%d %B %Y') }}{% if event.start_time %}, {{ event.start_time.strftime('%I:%M %p') }}{% endif %}{% if event.end_time %} – {{ event.end_time.strftime('%I:%M %p') }}{% endif %}</p></div>
+      <div class="info-card"><h4>Venue</h4><p>{{ event.venue or 'To be announced' }}</p></div>
+      {% if event.dress_code %}<div class="info-card"><h4>Dress Code</h4><p>{{ event.dress_code }}</p></div>{% endif %}
+      {% if event.contact_info %}<div class="info-card"><h4>Contact</h4><p>{{ event.contact_info }}</p></div>{% endif %}
+    </div>
+    {% if event.rules %}<p style="margin-top:20px;color:#7a6a5f;"><strong>Rules:</strong> {{ event.rules }}</p>{% endif %}
+  </section>
+
+  <section class="section" id="passes">
+    <h2 class="section-title">Choose Your Pass</h2>
+    <p class="section-sub">Secure checkout · Instant digital pass with QR code</p>
+    <div class="pass-grid">
+      {% for tt in ticket_types %}
+      <div class="pass-card {% if not tt.is_purchasable %}sold-out{% endif %}">
+        <h3>{{ tt.name }}</h3>
+        <div class="pass-price">₹{{ '%.0f'|format(tt.price) }} <small>/ pass</small></div>
+        <p class="pass-desc">{{ tt.description or '' }}</p>
+        {% if tt.is_purchasable %}
+          <p class="pass-avail">{{ tt.available_quantity }} left</p>
+          <a class="btn btn-block" href="{{ url_for('public.book_form', event_id=event.id, ticket_type_id=tt.id) }}">Book Now</a>
+        {% else %}
+          <p class="pass-avail">Sold out</p>
+          <button class="btn btn-block" disabled style="opacity:.5;cursor:not-allowed;">Sold Out</button>
+        {% endif %}
+      </div>
+      {% else %}
+      <p style="text-align:center;color:#999;">No passes available right now. Please check back soon.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<footer>
+  &copy; {{ event.date.year }} {{ event.name }}. Entry passes are non-transferable once scanned.
+  <br><a href="{{ url_for('auth.login') }}" style="color:#b48a3b;">Staff login</a>
+</footer>
+{% endblock %}

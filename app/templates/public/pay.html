@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Complete Payment{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Complete Your Payment</h2>
+  <div class="ticket-field"><label>Booking Reference</label><div>{{ booking.booking_reference }}</div></div>
+  <div class="ticket-field"><label>Pass Type</label><div>{{ booking.ticket_type.name }} × {{ booking.quantity }}</div></div>
+  <div class="ticket-field"><label>Amount Payable</label><div>₹{{ '%.2f'|format(booking.amount) }}</div></div>
+
+  <div id="pay-status" style="text-align:center;margin:20px 0;color:#7a6a5f;">Preparing secure checkout…</div>
+  <button id="pay-btn" class="btn btn-block" style="display:none;">Pay ₹{{ '%.2f'|format(booking.amount) }}</button>
+  <div class="error" id="pay-error" style="text-align:center;margin-top:10px;"></div>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+const bookingReference = {{ booking.booking_reference | tojson }};
+const statusEl = document.getElementById('pay-status');
+const payBtn = document.getElementById('pay-btn');
+const errEl = document.getElementById('pay-error');
+
+async function init() {
+  try {
+    const res = await fetch("{{ url_for('payment_api.create_order') }}", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({booking_reference: bookingReference}),
+    });
+    const order = await res.json();
+    if (!order.success) {
+      statusEl.textContent = order.error || 'Could not start payment.';
+      return;
+    }
+    statusEl.textContent = 'Ready — click below to pay securely via Razorpay.';
+    payBtn.style.display = 'block';
+
+    payBtn.addEventListener('click', () => {
+      const options = {
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        name: {{ event and event.name | tojson or '"Garba Night"' }},
+        description: 'Entry Pass',
+        order_id: order.order_id,
+        prefill: {
+          name: order.customer_name,
+          email: order.customer_email,
+          contact: order.customer_mobile,
+        },
+        theme: { color: '#6b1d3f' },
+        handler: async function (response) {
+          statusEl.textContent = 'Verifying payment…';
+          payBtn.style.display = 'none';
+          const verifyRes = await fetch("{{ url_for('payment_api.verify_payment') }}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              booking_reference: bookingReference,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const verifyResult = await verifyRes.json();
+          if (verifyResult.success) {
+            window.location.href = verifyResult.tickets[0].view_url;
+          } else {
+            errEl.textContent = verifyResult.error || 'Payment verification failed. If money was deducted, contact support with your booking reference.';
+            statusEl.textContent = '';
+            payBtn.style.display = 'block';
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            statusEl.textContent = 'Payment cancelled. You can try again below.';
+            payBtn.style.display = 'block';
+          }
+        }
+      };
+      const rzp = new Razorpay(options);
+      rzp.open();
+    });
+  } catch (e) {
+    statusEl.textContent = 'Could not reach payment server. Please refresh and try again.';
+  }
+}
+init();
+</script>
+{% endblock %}

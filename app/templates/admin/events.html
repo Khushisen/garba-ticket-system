@@ -1,0 +1,25 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Events{% endblock %}
+{% block admin_content %}
+<div class="topbar">
+  <h2 style="color:var(--maroon);margin:0;">Events</h2>
+  <a href="{{ url_for('admin.event_new') }}" class="btn btn-sm">+ New Event</a>
+</div>
+<table>
+  <thead><tr><th>Name</th><th>Date</th><th>Venue</th><th>Status</th><th>Pass Types</th><th></th></tr></thead>
+  <tbody>
+    {% for event in events %}
+    <tr>
+      <td>{{ event.name }}</td>
+      <td>{{ event.date.strftime('%d %b %Y') }}</td>
+      <td>{{ event.venue or '—' }}</td>
+      <td><span class="badge badge-active">{{ event.status }}</span></td>
+      <td><a href="{{ url_for('admin.ticket_types', event_id=event.id) }}">{{ event.ticket_types|length }} types</a></td>
+      <td><a href="{{ url_for('admin.event_edit', event_id=event.id) }}">Edit</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6">No events yet. Create your first event.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

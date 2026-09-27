@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Scan Result{% endblock %}
+{% block content %}
+<div class="scanner-page">
+  {% set cls = 'valid' if result == 'VALID' else 'invalid' %}
+  <div class="scan-result {{ cls }}">
+    <div class="big-icon">{% if result == 'VALID' %}✓{% else %}✗{% endif %}</div>
+    <h2>{{ result.replace('_',' ') }}</h2>
+    {% if ticket %}
+      <p><strong>Name:</strong> {{ ticket.holder_name }}</p>
+      <p><strong>Pass:</strong> {{ ticket.ticket_type_name }}</p>
+      <p><strong>Ticket ID:</strong> {{ ticket.ticket_id }}</p>
+    {% endif %}
+    <p>{{ message }}</p>
+  </div>
+  <p style="margin-top:20px;"><a href="{{ url_for('scanner.scanner_page') }}" class="btn btn-secondary">Back to Scanner</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+Hi {{ customer.name }},
+
+Your booking for {{ event.name }} is confirmed!
+
+Booking Reference: {{ booking.booking_reference }}
+Pass Type: {{ booking.ticket_type.name }} x {{ booking.quantity }}
+Event Date: {{ event.date.strftime('%d %B %Y') }}
+Venue: {{ event.venue or '' }}
+
+Your digital pass(es) are attached as PDF. You can also view them online:
+{% for link in ticket_links %}
+- {{ link }}
+{% endfor %}
+
+Please carry your ticket (screen or printout) to the entry gate. Each pass is valid for ONE entry only.
+
+See you on the dance floor!
+{{ event.name }} Team

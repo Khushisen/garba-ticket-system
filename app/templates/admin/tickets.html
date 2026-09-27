@@ -1,0 +1,30 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Tickets{% endblock %}
+{% block admin_content %}
+<div class="topbar">
+  <h2 style="color:var(--maroon);margin:0;">Tickets</h2>
+  <a href="{{ url_for('admin.tickets_export') }}" class="btn btn-sm">Export CSV</a>
+</div>
+<form class="searchbar" style="margin-bottom:16px;">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search by name, mobile, email, ticket or booking ID...">
+  <button class="btn btn-sm" type="submit">Search</button>
+</form>
+<table>
+  <thead><tr><th>Ticket ID</th><th>Name</th><th>Pass Type</th><th>Status</th><th>Booking Ref</th><th>Issued</th><th></th></tr></thead>
+  <tbody>
+    {% for t in tickets %}
+    <tr>
+      <td>{{ t.ticket_id }}</td>
+      <td>{{ t.holder_name }}</td>
+      <td>{{ t.ticket_type_name }}</td>
+      <td><span class="badge badge-{{ t.status }}">{{ t.status }}</span></td>
+      <td>{{ t.booking.booking_reference if t.booking else '—' }}</td>
+      <td>{{ t.issued_at.strftime('%d %b %I:%M %p') if t.issued_at else '—' }}</td>
+      <td><a href="{{ url_for('admin.ticket_detail', ticket_id=t.id) }}">View</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7">No tickets found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Pass Types — {{ event.name }}{% endblock %}
+{% block admin_content %}
+<h2 style="color:var(--maroon);">Pass Types — {{ event.name }}</h2>
+
+<table style="margin-bottom:30px;">
+  <thead><tr><th>Name</th><th>Price</th><th>Sold / Total</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    {% for tt in event.ticket_types %}
+    <tr>
+      <td>{{ tt.name }}</td>
+      <td>₹{{ '%.0f'|format(tt.price) }}</td>
+      <td>{{ tt.sold_quantity }} / {{ tt.total_quantity }}</td>
+      <td><span class="badge badge-{{ 'active' if tt.status == 'active' else 'CANCELLED' }}">{{ tt.status }}</span></td>
+      <td>
+        <details>
+          <summary style="cursor:pointer;">Edit</summary>
+          <form method="POST" action="{{ url_for('admin.ticket_type_edit', tt_id=tt.id) }}" style="margin-top:10px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group"><label>Name</label><input name="name" value="{{ tt.name }}"></div>
+            <div class="form-group"><label>Description</label><input name="description" value="{{ tt.description or '' }}"></div>
+            <div class="form-row">
+              <div class="form-group"><label>Price</label><input type="number" step="0.01" name="price" value="{{ tt.price }}"></div>
+              <div class="form-group"><label>Total Qty</label><input type="number" name="total_quantity" value="{{ tt.total_quantity }}"></div>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select name="status">
+                <option value="active" {{ 'selected' if tt.status == 'active' }}>Active</option>
+                <option value="disabled" {{ 'selected' if tt.status == 'disabled' }}>Disabled</option>
+              </select>
+            </div>
+            <button class="btn btn-sm" type="submit">Save</button>
+          </form>
+          <form method="POST" action="{{ url_for('admin.ticket_type_delete', tt_id=tt.id) }}" style="margin-top:8px;" onsubmit="return confirm('Delete this pass type?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+          </form>
+        </details>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No pass types yet — add one below.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3 style="color:var(--maroon);">Add Pass Type</h3>
+<form method="POST" style="max-width:480px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-group"><label>Name</label><input name="name" required placeholder="e.g. VIP Pass"></div>
+  <div class="form-group"><label>Description</label><input name="description" placeholder="e.g. Priority entry, reserved seating"></div>
+  <div class="form-row">
+    <div class="form-group"><label>Price (₹)</label><input type="number" step="0.01" name="price" required></div>
+    <div class="form-group"><label>Total Quantity</label><input type="number" name="total_quantity" required></div>
+  </div>
+  <button type="submit" class="btn">Add Pass Type</button>
+</form>
+{% endblock %}

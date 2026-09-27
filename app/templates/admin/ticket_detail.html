@@ -1,0 +1,50 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Ticket {{ ticket.ticket_id }}{% endblock %}
+{% block admin_content %}
+<h2 style="color:var(--maroon);">{{ ticket.ticket_id }}</h2>
+<table style="max-width:600px;margin-bottom:20px;">
+  <tbody>
+    <tr><th>Holder Name</th><td>{{ ticket.holder_name }}</td></tr>
+    <tr><th>Pass Type</th><td>{{ ticket.ticket_type_name }}</td></tr>
+    <tr><th>Status</th><td><span class="badge badge-{{ ticket.status }}">{{ ticket.status }}</span></td></tr>
+    <tr><th>Booking Reference</th><td>{{ ticket.booking.booking_reference }}</td></tr>
+    <tr><th>Payment Status</th><td>{{ ticket.booking.payment.status if ticket.booking.payment else 'N/A' }}</td></tr>
+    <tr><th>Mobile (last 4)</th><td>******{{ ticket.mobile_last4 or '----' }}</td></tr>
+    <tr><th>Issued At</th><td>{{ ticket.issued_at }}</td></tr>
+    <tr><th>Used At</th><td>{{ ticket.used_at or '—' }}</td></tr>
+    <tr><th>Used By</th><td>{{ ticket.used_by or '—' }}</td></tr>
+  </tbody>
+</table>
+
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:30px;">
+  {% if ticket.status == 'ACTIVE' %}
+  <form method="POST" action="{{ url_for('admin.ticket_mark_used', ticket_id=ticket.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-sm" type="submit">Mark as Used</button>
+  </form>
+  <form method="POST" action="{{ url_for('admin.ticket_cancel', ticket_id=ticket.id) }}" onsubmit="return confirm('Cancel this ticket?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-sm btn-danger" type="submit">Cancel Ticket</button>
+  </form>
+  {% endif %}
+  {% if ticket.status == 'USED' %}
+  <form method="POST" action="{{ url_for('admin.ticket_reset', ticket_id=ticket.id) }}" onsubmit="return confirm('Reset this ticket back to ACTIVE? Only do this to correct a mis-scan.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-sm btn-secondary" type="submit">Reset to Active</button>
+  </form>
+  {% endif %}
+  <a href="{{ url_for('ticket.download_ticket', secure_slug=ticket.secure_slug) }}" class="btn btn-sm btn-secondary">Download PDF</a>
+</div>
+
+<h3 style="color:var(--maroon);">Scan History</h3>
+<table>
+  <thead><tr><th>Result</th><th>Gate</th><th>Time</th></tr></thead>
+  <tbody>
+    {% for log in ticket.scan_logs|sort(attribute='scan_time', reverse=True) %}
+    <tr><td><span class="badge badge-{{ log.result }}">{{ log.result }}</span></td><td>{{ log.gate_name or '—' }}</td><td>{{ log.scan_time }}</td></tr>
+    {% else %}
+    <tr><td colspan="3">No scans yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
