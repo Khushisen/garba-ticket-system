@@ -6,6 +6,11 @@ from app.models import AdminUser, Event, TicketType
 
 
 def register_commands(app):
+    @app.cli.command("init-db")
+    def init_db():
+        """Create all database tables (safe to run repeatedly)."""
+        db.create_all()
+        click.echo("Database tables ready.")
     @app.cli.command("create-admin")
     @click.option("--username", prompt=True)
     @click.option("--email", prompt=True)

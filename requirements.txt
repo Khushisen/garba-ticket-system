@@ -1,6 +1,6 @@
 setuptools==81.0.0
 Flask==3.0.3
-Flask-SQLAlchemy==3.1.1
+Flask-SQLAlchemy==2.0.36
 Flask-Migrate==4.0.7
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
